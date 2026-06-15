@@ -1,35 +1,19 @@
-# VertexOS package list
+# VertexOS package list — ADDED ON TOP of mkiso.sh -b xfce variant base.
 # Format: one package per line, # for comments.
-# Consumed by: build/mklive-wrapper.sh -> mklive.sh -p "$(cat packages.txt)"
-
-# === Live-system + installer essentials ===
-# These are what makes the live ISO usable BEFORE install completes:
-# DHCP client, ping, partitioning, GUI install loader (Calamares: Phase 2),
-# console-mode TUI installer fallback (void-installer). Every other distro
-# (Ubuntu, Arch, Manjaro) ships this minimum baseline pre-installed on the
-# live image — we were missing it.
-void-installer
-dhcpcd
-iproute2
-iputils
-parted
-gptfdisk
-cryptsetup
-kbd
-nano
-less
-man-db
-pciutils
-usbutils
-acpid
-polkit
-elogind
-wpa_supplicant
-iw
+# Consumed by build/mklive-wrapper.sh, passed to mkiso via -- -p "..."
+#
+# The xfce variant already includes:
+#   xfce4, lightdm + lightdm-gtk-greeter, NetworkManager + NM-applet,
+#   dbus, polkitd, gnome-themes-standard, gnome-keyring, gvfs-*, udisks2,
+#   xfce4-pulseaudio-plugin, firefox, void-installer (auto-bundled).
+# Plus services auto-enabled: dbus, lightdm, NetworkManager, polkitd.
 
 # === Security core ===
-# (linux-hardened srcpkg planned for Phase 1; stock linux 6.18 already ships
-#  every KSPP hardening flag Chimera's linux-lts uses — see docs/kernel-config.md)
+# Stock 'linux' 6.18 already ships every KSPP hardening flag Chimera's
+# linux-lts uses (HARDENED_USERCOPY_DEFAULT_ON, SLAB_FREELIST_HARDENED,
+# FORTIFY_SOURCE, STACKPROTECTOR_STRONG, MITIGATION_PAGE_TABLE_ISOLATION,
+# SECURITY_APPARMOR built-in). vertex-kernel-config srcpkg with
+# ZERO_CALL_USED_REGS planned for Phase 1 — see docs/kernel-config.md.
 linux
 linux-firmware-amd
 linux-firmware-intel
@@ -50,57 +34,41 @@ rkhunter
 chkrootkit
 firejail
 
-# === Desktop ===
-xfce4
-xfce4-plugins
-xfce4-pulseaudio-plugin
-thunar-volman
-xorg-minimal
-xorg-input-drivers
-xorg-video-drivers
-sddm
-picom
-network-manager-applet
-NetworkManager
-dbus
-dbus-x11
-mesa-dri
-xauth
-xterm
+# === Live system extras (mkiso xfce variant misses some) ===
+parted
+gptfdisk
+cryptsetup
+lvm2
+btrfs-progs
+exfatprogs
+sbctl
 
-# Fonts + theme deps so XFCE renders text properly out of the box
-noto-fonts-ttf
-noto-fonts-emoji
-dejavu-fonts-ttf
-liberation-fonts-ttf
-font-bitstream-vera
-gtk-engine-murrine
-gnome-themes-extra
-
-# GUI remote access (so installed-to-disk system is reachable from VBox / metal)
+# === GUI remote access ===
+# tigervnc lets installed-to-disk systems be reachable from VMs / headless
+# metal without needing a monitor attached.
 tigervnc
 
-# === Network tools ===
+# === Network analysis ===
 iftop
 nethogs
 bmon
 tcpdump
 wireshark
-# nmap is not packaged in Void; the following cover its host-discovery and
-# port-scanning roles:
-#   masscan    - fast asynchronous TCP port scanner
-#   arp-scan   - layer-2 LAN host discovery
+# nmap is not packaged in Void; the following cover its roles:
+#   masscan    - fast async TCP port scanner
+#   arp-scan   - L2 LAN host discovery
 #   netscanner - modern TUI: discovery, port scan, packet capture
 masscan
 arp-scan
 netscanner
 mtr
 
-# === Base tools ===
+# === CLI tools (developer + admin) ===
 git
 curl
 wget
 vim
+nano
 htop
 tmux
 ripgrep
@@ -109,16 +77,12 @@ jq
 xtools
 bash-completion
 sudo
+less
+man-db
+pciutils
+usbutils
 
-# === Filesystem ===
-e2fsprogs
-btrfs-progs
-dosfstools
-exfatprogs
-lvm2
-
-# === Boot / firmware ===
+# === Boot / firmware (xfce variant includes grub; we add EFI variants) ===
 grub-x86_64-efi
 grub-i386-efi
 efibootmgr
-sbctl
