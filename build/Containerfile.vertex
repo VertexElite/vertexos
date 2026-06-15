@@ -1,0 +1,27 @@
+# VertexOS builder image.
+# Wraps void-mklive with every host tool mklive.sh / mkiso.sh shells out to.
+# Built from repo root:  docker build -f build/Containerfile.vertex -t vertexos-builder:latest .
+#
+# Lives in the parent repo (not inside the build/void-mklive submodule) so it
+# stays tracked and the submodule working tree stays clean.
+#
+# A glibc base builds musl-target ISOs fine — mklive assembles the target
+# rootfs with `xbps-install -r` against the musl repos regardless of host libc
+# (this is what upstream void CI does).
+FROM ghcr.io/void-linux/void-glibc-full:latest
+
+# repo-de is the working baseline (repo-default has been refusing connections);
+# kept in sync with build/mklive-wrapper.sh. Override with --build-arg MIRROR=...
+ARG MIRROR="https://repo-de.voidlinux.org"
+
+RUN xbps-install -SyuR "${MIRROR}/current" xbps \
+	&& xbps-install -yuR "${MIRROR}/current" \
+	&& xbps-install -yR "${MIRROR}/current" \
+		bash make git kmod xz lzo \
+		outils dosfstools e2fsprogs util-linux \
+		squashfs-tools xorriso \
+		grub grub-x86_64-efi grub-i386-efi mtools \
+		qemu-user-arm qemu-user-aarch64 binfmt-support \
+	&& rm -rf /var/cache/xbps
+
+CMD ["/bin/sh"]

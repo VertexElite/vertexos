@@ -28,7 +28,7 @@ Requires Docker, QEMU+KVM, ~3GB disk.
 git submodule update --init --recursive
 
 # 1. Build the builder container (one-time)
-docker build -f build/void-mklive/Containerfile.vertex -t vertexos-builder:latest .
+docker build -f build/Containerfile.vertex -t vertexos-builder:latest .
 
 # 2. Build the ISO
 ./build/mklive-wrapper.sh
