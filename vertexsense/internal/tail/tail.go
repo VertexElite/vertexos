@@ -94,6 +94,8 @@ func Follow(ctx context.Context, path string, fromStart bool, interval time.Dura
 		return !os.SameFile(cur, onDisk)
 	}
 
+	open() // attach immediately — no blind first-interval window
+
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
