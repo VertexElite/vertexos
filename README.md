@@ -22,8 +22,13 @@ the hardening, the sensors, and the boot path ship as the default. Not optional 
 Requires Docker, QEMU+KVM, ~3GB disk.
 
 ```bash
+# 0. Fetch submodules (void-mklive + Aero theme). REQUIRED — without this
+#    build/void-mklive/ is empty and the Docker build silently produces a
+#    broken image.
+git submodule update --init --recursive
+
 # 1. Build the builder container (one-time)
-docker build -f void-mklive/Containerfile.vertex -t vertexos-builder:latest .
+docker build -f build/Containerfile.vertex -t vertexos-builder:latest .
 
 # 2. Build the ISO
 ./build/mklive-wrapper.sh

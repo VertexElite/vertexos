@@ -27,7 +27,7 @@ firejail
 
 # === Desktop ===
 xfce4
-xfce4-goodies
+xfce4-plugins
 xfce4-pulseaudio-plugin
 thunar-volman
 xorg-minimal
@@ -44,7 +44,14 @@ nethogs
 bmon
 tcpdump
 wireshark
-nmap
+# nmap is not packaged in Void; the following cover its host-discovery and
+# port-scanning roles:
+#   masscan    - fast asynchronous TCP port scanner
+#   arp-scan   - layer-2 LAN host discovery
+#   netscanner - modern TUI: discovery, port scan, packet capture
+masscan
+arp-scan
+netscanner
 mtr
 
 # === Base tools ===
