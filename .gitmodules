@@ -1,0 +1,6 @@
+[submodule "build/void-mklive"]
+	path = build/void-mklive
+	url = https://github.com/void-linux/void-mklive.git
+[submodule "ui/themes/aero-glass"]
+	path = ui/themes/aero-glass
+	url = https://github.com/VertexElite/Aero-Glass-XFCE4.git
