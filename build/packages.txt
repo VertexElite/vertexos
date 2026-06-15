@@ -2,6 +2,31 @@
 # Format: one package per line, # for comments.
 # Consumed by: build/mklive-wrapper.sh -> mklive.sh -p "$(cat packages.txt)"
 
+# === Live-system + installer essentials ===
+# These are what makes the live ISO usable BEFORE install completes:
+# DHCP client, ping, partitioning, GUI install loader (Calamares: Phase 2),
+# console-mode TUI installer fallback (void-installer). Every other distro
+# (Ubuntu, Arch, Manjaro) ships this minimum baseline pre-installed on the
+# live image — we were missing it.
+void-installer
+dhcpcd
+iproute2
+iputils
+parted
+gptfdisk
+cryptsetup
+kbd
+nano
+less
+man-db
+pciutils
+usbutils
+acpid
+polkit
+elogind
+wpa_supplicant
+iw
+
 # === Security core ===
 # (linux-hardened srcpkg planned for Phase 1; stock linux 6.18 already ships
 #  every KSPP hardening flag Chimera's linux-lts uses — see docs/kernel-config.md)
@@ -37,6 +62,23 @@ sddm
 picom
 network-manager-applet
 NetworkManager
+dbus
+dbus-x11
+mesa-dri
+xauth
+xterm
+
+# Fonts + theme deps so XFCE renders text properly out of the box
+noto-fonts-ttf
+noto-fonts-emoji
+dejavu-fonts-ttf
+liberation-fonts-ttf
+font-bitstream-vera
+gtk-engine-murrine
+gnome-themes-extra
+
+# GUI remote access (so installed-to-disk system is reachable from VBox / metal)
+tigervnc
 
 # === Network tools ===
 iftop
@@ -55,7 +97,6 @@ netscanner
 mtr
 
 # === Base tools ===
-void-installer
 git
 curl
 wget
@@ -74,7 +115,6 @@ e2fsprogs
 btrfs-progs
 dosfstools
 exfatprogs
-cryptsetup
 lvm2
 
 # === Boot / firmware ===
