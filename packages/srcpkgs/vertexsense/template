@@ -1,0 +1,49 @@
+# Template file for 'vertexsense'
+#
+# VertexSense — the VertexOS security telemetry TUI. Built from the VertexOS
+# monorepo's vertexsense/ module.
+#
+# Release flow: tag the repo `vertexsense-v${version}`, then run
+#   xgensum -i srcpkgs/vertexsense/template
+# to fill `checksum`. For local iteration, point distfiles at a path:// URL or
+# use `./xbps-src -E build vertexsense` against a vendored tarball.
+pkgname=vertexsense
+version=0.1.0
+revision=1
+build_style=go
+go_import_path="github.com/VertexElite/vertexos/vertexsense"
+go_package="${go_import_path}/cmd/vertexsense"
+short_desc="VertexOS security telemetry TUI (Falco/Suricata/nftables/AIDE)"
+maintainer="VertexElite <security@vertexelite.org>"
+license="MIT"
+homepage="https://github.com/VertexElite/vertexos"
+distfiles="https://github.com/VertexElite/vertexos/archive/refs/tags/vertexsense-v${version}.tar.gz"
+checksum=@TODO_fill_with_xgensum
+# The tarball extracts the whole monorepo; build only the vertexsense module.
+wrksrc="vertexos-vertexsense-v${version}"
+
+do_build() {
+	cd vertexsense
+	go build -trimpath -ldflags "-s -w" -o "${wrksrc}/vertexsense" ./cmd/vertexsense
+}
+
+do_install() {
+	vbin vertexsense
+	vdoc vertexsense/README.md
+	vlicense vertexsense/LICENSE 2>/dev/null || true
+}
+
+post_install() {
+	# XFCE launcher so VertexSense shows up in the menu / Aero panel.
+	vmkdir usr/share/applications
+	cat > "${DESTDIR}/usr/share/applications/vertexsense.desktop" <<-EOF
+		[Desktop Entry]
+		Type=Application
+		Name=VertexSense
+		Comment=VertexOS security telemetry dashboard
+		Exec=xfce4-terminal --title=VertexSense -e vertexsense
+		Terminal=false
+		Icon=vertexos-logo
+		Categories=System;Security;Monitor;
+	EOF
+}
