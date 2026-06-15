@@ -7,8 +7,8 @@
 auth      required    pam_succeed_if.so user ingroup autologin
 auth      required    pam_permit.so
 
-account   include     system-login
+account   include     system-auth
 
-session   include     system-login
+session   include     system-auth
 
-password  include     system-login
+password  include     system-auth
