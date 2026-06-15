@@ -23,10 +23,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
-      - name: Checkout (with submodules)
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
+      # Only void-mklive is needed for the ISO build. Init it explicitly rather
+      # than `submodules: recursive` — the default GITHUB_TOKEN is scoped to
+      # this repo and can't fetch the ui/themes/aero-glass submodule, which the
+      # build doesn't use anyway.
+      - name: Init void-mklive submodule
+        run: git submodule update --init build/void-mklive
 
       - name: Build builder container
         run: docker build -f build/Containerfile.vertex -t vertexos-builder:latest .
