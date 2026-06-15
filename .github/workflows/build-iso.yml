@@ -1,0 +1,50 @@
+name: Build ISO
+
+# Builds the VertexOS live ISO on GitHub-hosted runners and publishes it as a
+# downloadable workflow artifact. Runners have open network + Docker, so the
+# build runs against the Void mirrors without the egress restrictions of a
+# sandboxed dev environment.
+
+on:
+  push:
+    branches:
+      - main
+      - 'claude/**'
+    paths:
+      - 'build/**'
+      - 'kernel/**'
+      - 'security/**'
+      - 'ui/**'
+      - '.github/workflows/build-iso.yml'
+  workflow_dispatch:
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build builder container
+        run: docker build -f build/Containerfile.vertex -t vertexos-builder:latest .
+
+      - name: Build ISO
+        run: ./build/mklive-wrapper.sh
+
+      - name: Checksum
+        run: |
+          cd build/out
+          sha256sum *.iso | tee SHA256SUMS
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vertexos-iso
+          path: |
+            build/out/*.iso
+            build/out/SHA256SUMS
+          retention-days: 14
+          if-no-files-found: error
