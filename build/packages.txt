@@ -44,8 +44,14 @@ nethogs
 bmon
 tcpdump
 wireshark
-# nmap is not packaged in the Void repos — netscanner (modern TUI) and zmap
-# are the available scanners if a replacement is wanted.
+# nmap is not packaged in Void; the following cover its host-discovery and
+# port-scanning roles:
+#   masscan    - fast asynchronous TCP port scanner
+#   arp-scan   - layer-2 LAN host discovery
+#   netscanner - modern TUI: discovery, port scan, packet capture
+masscan
+arp-scan
+netscanner
 mtr
 
 # === Base tools ===
