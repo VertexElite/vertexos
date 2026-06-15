@@ -32,17 +32,22 @@ if ! grep -q ${USERSHELL} ${NEWROOT}/etc/shells ; then
     echo ${USERSHELL} >> ${NEWROOT}/etc/shells
 fi
 
-# Create autologin group (lightdm PAM requires user be in this group to
-# autologin without password). Then create the live user.
+# Create autologin group (lightdm PAM uses pam_succeed_if to allow members
+# in without password if /etc/pam.d/lightdm-autologin is present).
 chroot ${NEWROOT} groupadd -r autologin 2>/dev/null || true
 chroot ${NEWROOT} useradd -m -c $USERNAME -G audio,video,wheel,kvm,plugdev,input,users,autologin -s $USERSHELL $USERNAME
 
-# Empty password — autologin handles graphical + TTY; user prompts for
-# password during install via void-installer.
-chroot ${NEWROOT} passwd -d $USERNAME >/dev/null 2>&1
+# Live user password = same as username (vertex / vertex). Documented as
+# live-only convention (matches Kali kali/kali, Parrot parrot/parrot). The
+# installer sets a real per-user password — this is throwaway live-session.
+# autologin via PAM kicks in first via /etc/pam.d/lightdm-autologin so the
+# password prompt should NOT appear for desktop boot, but is still set as
+# a fallback for tty + SSH if user disables autologin.
+chroot ${NEWROOT} sh -c "echo '${USERNAME}:${USERNAME}' | chpasswd -c SHA512"
 
-# Lock root password. No hardcoded 'voidlinux' default — live ISOs with
-# known root passwords are a regular boot-and-pwn target on shared LANs.
+# Lock root password. No hardcoded default — live ISOs with known root
+# passwords are a regular boot-and-pwn target on shared LANs. Users who
+# need root run 'sudo -i' as vertex (NOPASSWD wheel via /etc/sudoers.d/).
 chroot ${NEWROOT} passwd -l root >/dev/null 2>&1
 
 # wheel group sudo with NOPASSWD on live ISO (install convenience).
