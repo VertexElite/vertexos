@@ -1,0 +1,12 @@
+NAME="VertexOS"
+PRETTY_NAME="VertexOS alpha"
+ID=vertexos
+ID_LIKE=void
+VERSION="alpha-2026.06"
+VERSION_ID="alpha"
+ANSI_COLOR="0;36"
+LOGO=vertexos-logo
+HOME_URL="https://github.com/VertexElite/vertexos"
+SUPPORT_URL="https://github.com/VertexElite/vertexos/issues"
+BUG_REPORT_URL="https://github.com/VertexElite/vertexos/issues"
+DOCUMENTATION_URL="https://github.com/VertexElite/vertexos/blob/main/README.md"

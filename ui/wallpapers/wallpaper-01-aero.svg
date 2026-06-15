@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <radialGradient id="aero" cx="40%" cy="50%" r="80%">
+      <stop offset="0%"  stop-color="#2d7dd2"/>
+      <stop offset="35%" stop-color="#1a4a7d"/>
+      <stop offset="100%" stop-color="#080d14"/>
+    </radialGradient>
+    <radialGradient id="bokeh1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00c9a7" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#00c9a7" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bokeh2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2d7dd2" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#2d7dd2" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bokehWarm" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff6b35" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#ff6b35" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Base Aero gradient -->
+  <rect width="1920" height="1080" fill="url(#aero)"/>
+
+  <!-- Bokeh discs -->
+  <circle cx="200"  cy="180"  r="320" fill="url(#bokeh1)"/>
+  <circle cx="1500" cy="240"  r="380" fill="url(#bokeh2)"/>
+  <circle cx="1700" cy="800"  r="260" fill="url(#bokeh1)"/>
+  <circle cx="500"  cy="900"  r="220" fill="url(#bokeh2)"/>
+  <circle cx="980"  cy="540"  r="500" fill="url(#bokeh1)"/>
+  <circle cx="1200" cy="420"  r="160" fill="url(#bokehWarm)"/>
+  <circle cx="350"  cy="500"  r="180" fill="url(#bokehWarm)"/>
+
+  <!-- Faint diamond pattern for that subtle XFCE-default feel but in our palette -->
+  <g stroke="#00c9a7" stroke-width="1.5" fill="none" opacity="0.06">
+    <polygon points="960,40   1880,540   960,1040  40,540"/>
+    <polygon points="960,140  1780,540   960,940   140,540"/>
+    <polygon points="960,240  1680,540   960,840   240,540"/>
+  </g>
+
+  <!-- Tiny "VertexOS" text in the bottom-right corner -->
+  <g font-family="monospace" font-size="14" fill="#e8f4ff" opacity="0.30">
+    <text x="1810" y="1050" text-anchor="end">VERTEX<tspan fill="#00c9a7">OS</tspan></text>
+    <text x="1810" y="1066" text-anchor="end" font-size="10" opacity="0.7">alpha · 2026</text>
+  </g>
+</svg>

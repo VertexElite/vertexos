@@ -1,0 +1,12 @@
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                                                                     │
+  │   VertexOS alpha                                                    │
+  │   Security-hardened Linux · Void musl · Supply-chain defense        │
+  │                                                                     │
+  │   To install to disk:        sudo void-installer                    │
+  │   To audit hardening state:  sudo /usr/share/vertexos/audits/run-all.sh    │
+  │   Issues + docs:             github.com/VertexElite/vertexos        │
+  │                                                                     │
+  └─────────────────────────────────────────────────────────────────────┘
+

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"  stop-color="#080d14"/>
+      <stop offset="50%" stop-color="#0d1f3a"/>
+      <stop offset="100%" stop-color="#080d14"/>
+    </linearGradient>
+    <linearGradient id="shieldFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"  stop-color="#00c9a7" stop-opacity="0.85"/>
+      <stop offset="60%" stop-color="#2d7dd2" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#0d1520" stop-opacity="0.30"/>
+    </linearGradient>
+    <linearGradient id="vFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e8f4ff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#00c9a7" stop-opacity="0.95"/>
+    </linearGradient>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+  </defs>
+
+  <!-- Deep dark base -->
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+
+  <!-- Faint grid -->
+  <g stroke="#1a2d45" stroke-width="0.5" opacity="0.35">
+    <g>
+      <line x1="0" y1="0"    x2="1920" y2="0"/>
+      <line x1="0" y1="120"  x2="1920" y2="120"/>
+      <line x1="0" y1="240"  x2="1920" y2="240"/>
+      <line x1="0" y1="360"  x2="1920" y2="360"/>
+      <line x1="0" y1="480"  x2="1920" y2="480"/>
+      <line x1="0" y1="600"  x2="1920" y2="600"/>
+      <line x1="0" y1="720"  x2="1920" y2="720"/>
+      <line x1="0" y1="840"  x2="1920" y2="840"/>
+      <line x1="0" y1="960"  x2="1920" y2="960"/>
+      <line x1="0" y1="1080" x2="1920" y2="1080"/>
+    </g>
+    <g>
+      <line x1="0"    y1="0" x2="0"    y2="1080"/>
+      <line x1="240"  y1="0" x2="240"  y2="1080"/>
+      <line x1="480"  y1="0" x2="480"  y2="1080"/>
+      <line x1="720"  y1="0" x2="720"  y2="1080"/>
+      <line x1="960"  y1="0" x2="960"  y2="1080"/>
+      <line x1="1200" y1="0" x2="1200" y2="1080"/>
+      <line x1="1440" y1="0" x2="1440" y2="1080"/>
+      <line x1="1680" y1="0" x2="1680" y2="1080"/>
+      <line x1="1920" y1="0" x2="1920" y2="1080"/>
+    </g>
+  </g>
+
+  <!-- Glow halo behind shield -->
+  <circle cx="960" cy="540" r="320" fill="#00c9a7" opacity="0.15" filter="url(#softGlow)"/>
+
+  <!-- Shield centered -->
+  <g transform="translate(960 540) scale(1.0)">
+    <path d="M0 -260 L200 -200 L200 -50 C200 60 138 168 0 220 C-138 168 -200 60 -200 -50 L-200 -200 Z"
+          fill="url(#shieldFill)"
+          stroke="#00c9a7"
+          stroke-width="2"
+          opacity="0.95"/>
+    <!-- V mark -->
+    <path d="M-100 -130 L0 100 L100 -130 L60 -130 L0 10 L-60 -130 Z"
+          fill="url(#vFill)"/>
+  </g>
+
+  <!-- Wordmark -->
+  <g font-family="monospace" text-anchor="middle">
+    <text x="960" y="860" font-size="44" fill="#e8f4ff" letter-spacing="6">
+      VERTEX<tspan fill="#00c9a7">OS</tspan>
+    </text>
+    <text x="960" y="900" font-size="14" fill="#4a6080" letter-spacing="4">
+      SECURITY-HARDENED · VOID MUSL · SUPPLY-CHAIN DEFENSE
+    </text>
+  </g>
+</svg>

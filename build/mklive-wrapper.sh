@@ -47,15 +47,18 @@ echo
 # We rename it to our convention at the end.
 INNER_NAME="void-live-${ARCH}-${DATE}-${VARIANT}.iso"
 
+OVERLAY="$ROOT/build/rootfs-overlay"
+
 docker run --rm --privileged \
     -v "$ROOT/build/void-mklive:/mklive" \
     -v "$OUT_DIR:/out" \
+    -v "$OVERLAY:/overlay:ro" \
     -w /mklive \
     vertexos-builder:latest \
     sh -c "./mkiso.sh -a $ARCH -b $VARIANT -d $DATE \
         -r $MIRROR/current \
         -r $MIRROR/current/musl \
-        -- -p \"$EXTRA_PKGS\" -o /out/$OUT_NAME"
+        -- -p \"$EXTRA_PKGS\" -I /overlay -o /out/$OUT_NAME"
 
 echo
 if [ -f "$OUT_DIR/$OUT_NAME" ]; then
