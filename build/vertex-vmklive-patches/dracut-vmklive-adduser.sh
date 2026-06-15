@@ -43,7 +43,7 @@ chroot ${NEWROOT} useradd -m -c $USERNAME -G audio,video,wheel,kvm,plugdev,input
 # autologin via PAM kicks in first via /etc/pam.d/lightdm-autologin so the
 # password prompt should NOT appear for desktop boot, but is still set as
 # a fallback for tty + SSH if user disables autologin.
-chroot ${NEWROOT} sh -c "echo '${USERNAME}:${USERNAME}' | chpasswd -c SHA512"
+chroot ${NEWROOT} sh -c "echo '${USERNAME}:${USERNAME}' | chpasswd"
 
 # Lock root password. No hardcoded default — live ISOs with known root
 # passwords are a regular boot-and-pwn target on shared LANs. Users who
