@@ -27,7 +27,7 @@ firejail
 
 # === Desktop ===
 xfce4
-xfce4-goodies
+xfce4-plugins
 xfce4-pulseaudio-plugin
 thunar-volman
 xorg-minimal
@@ -44,7 +44,8 @@ nethogs
 bmon
 tcpdump
 wireshark
-nmap
+# nmap is not packaged in the Void repos — netscanner (modern TUI) and zmap
+# are the available scanners if a replacement is wanted.
 mtr
 
 # === Base tools ===
