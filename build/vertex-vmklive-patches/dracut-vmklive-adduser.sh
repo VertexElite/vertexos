@@ -32,15 +32,18 @@ if ! grep -q ${USERSHELL} ${NEWROOT}/etc/shells ; then
     echo ${USERSHELL} >> ${NEWROOT}/etc/shells
 fi
 
-# Create new user. Groups include kvm and plugdev for hardware research.
-chroot ${NEWROOT} useradd -m -c $USERNAME -G audio,video,wheel,kvm,plugdev,input,users -s $USERSHELL $USERNAME
+# Create autologin group (lightdm PAM requires user be in this group to
+# autologin without password). Then create the live user.
+chroot ${NEWROOT} groupadd -r autologin 2>/dev/null || true
+chroot ${NEWROOT} useradd -m -c $USERNAME -G audio,video,wheel,kvm,plugdev,input,users,autologin -s $USERSHELL $USERNAME
+
+# Empty password — autologin handles graphical + TTY; user prompts for
+# password during install via void-installer.
 chroot ${NEWROOT} passwd -d $USERNAME >/dev/null 2>&1
 
-# Lock root + force-expire user password on first interactive login.
-# No hardcoded 'voidlinux' default — live ISOs with known root passwords are
-# a regular boot-and-pwn target on shared LAN segments.
+# Lock root password. No hardcoded 'voidlinux' default — live ISOs with
+# known root passwords are a regular boot-and-pwn target on shared LANs.
 chroot ${NEWROOT} passwd -l root >/dev/null 2>&1
-chroot ${NEWROOT} passwd -e $USERNAME >/dev/null 2>&1
 
 # wheel group sudo with NOPASSWD on live ISO (install convenience).
 # The installed system gets a proper sudoers via void-installer.
