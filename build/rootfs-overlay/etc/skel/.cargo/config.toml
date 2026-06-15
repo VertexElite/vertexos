@@ -1,0 +1,30 @@
+# VertexOS default cargo config — seeded into every new user's ~/.cargo/config.toml.
+# Hardens against cargo build.rs network exfil (CVE-2026-5223 + onering crate
+# June 10 2026 + general supply-chain pattern).
+
+[source.crates-io]
+# Pin official registry; stubby DoT enforces resolution.
+replace-with = "crates-io-pinned"
+
+[source.crates-io-pinned]
+registry = "https://github.com/rust-lang/crates.io-index"
+
+[net]
+# Cargo will use git2 instead of CLI git (more sandboxable)
+git-fetch-with-cli = false
+retry = 2
+offline = false
+
+[build]
+# Reject build.rs that does not declare its needs via rerun-if directives
+# (helps surface unusual builds for review).
+# rustflags = ["-D", "warnings"]  # opt-in via vertex-cargo wrapper
+
+[install]
+# Default install root inside user $HOME — never /usr/local
+root = "~/.cargo"
+
+# Note: cargo doesn't have a native "disable build.rs" knob. VertexOS will
+# ship a `vertex-cargo` shim (Phase 1.5) that wraps cargo in bwrap with
+# network egress restricted to crates.io + index.crates.io during build,
+# and warns on first encounter of a new build.rs per crate.

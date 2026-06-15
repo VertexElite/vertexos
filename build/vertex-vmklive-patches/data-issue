@@ -1,0 +1,20 @@
+
+\e[1;36mVertexOS\e[0m \e[0;37malpha\e[0m  ·  Security-hardened · Supply-chain defense
+
+Welcome to the VertexOS live system.
+
+\e[1mTo install to disk:\e[0m
+    sudo void-installer
+
+\e[1mTo audit hardening state:\e[0m
+    sudo /usr/share/vertexos/audits/run-all.sh
+
+\e[1mTo configure networking, then install packages:\e[0m
+    sudo xbps-install -Sy <package>
+
+\e[1mResources:\e[0m
+    https://github.com/VertexElite/vertexos
+    https://github.com/VertexElite/vertexos/blob/main/docs/threat-model.md
+
+Kernel \r on \m  ·  \d \t  ·  tty \l
+
