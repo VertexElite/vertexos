@@ -1,0 +1,76 @@
+# VertexOS package list
+# Format: one package per line, # for comments.
+# Consumed by: build/mklive-wrapper.sh -> mklive.sh -p "$(cat packages.txt)"
+
+# === Security core ===
+# (linux-hardened srcpkg planned for Phase 1; stock linux 6.18 already ships
+#  every KSPP hardening flag Chimera's linux-lts uses — see docs/kernel-config.md)
+linux
+linux-firmware-amd
+linux-firmware-intel
+apparmor
+audit
+nftables
+stubby
+usbguard
+
+# Detection / monitoring (Phase 2-3)
+# falco          # not yet packaged in Void; src build planned
+# suricata
+# zeek
+# ntopng
+clamav
+aide
+rkhunter
+chkrootkit
+firejail
+
+# === Desktop ===
+xfce4
+xfce4-goodies
+xfce4-pulseaudio-plugin
+thunar-volman
+xorg-minimal
+xorg-input-drivers
+xorg-video-drivers
+sddm
+picom
+network-manager-applet
+NetworkManager
+
+# === Network tools ===
+iftop
+nethogs
+bmon
+tcpdump
+wireshark
+nmap
+mtr
+
+# === Base tools ===
+git
+curl
+wget
+vim
+htop
+tmux
+ripgrep
+fd
+jq
+xtools
+bash-completion
+sudo
+
+# === Filesystem ===
+e2fsprogs
+btrfs-progs
+dosfstools
+exfatprogs
+cryptsetup
+lvm2
+
+# === Boot / firmware ===
+grub-x86_64-efi
+grub-i386-efi
+efibootmgr
+sbctl

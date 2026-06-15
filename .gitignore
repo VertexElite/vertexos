@@ -1,0 +1,8 @@
+build/out/
+build/void-mklive/xbps-cachedir-*/
+build/void-mklive/build/
+*.iso
+*.iso.sha256
+.DS_Store
+*.swp
+__pycache__/
