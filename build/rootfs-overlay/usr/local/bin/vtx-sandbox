@@ -1,0 +1,18 @@
+#!/bin/sh
+# Run a command under the VertexOS dev-sandbox AppArmor profile — credential
+# stores and persistence paths are out of reach for whatever runs inside.
+#
+#   vtx-sandbox claude          # run an agent with no access to your secrets
+#   vtx-sandbox npm install     # install deps with persistence writes blocked
+#
+# Installed at /usr/local/bin/vtx-sandbox.
+set -eu
+if [ "$#" -eq 0 ]; then
+	echo "usage: vtx-sandbox <command> [args...]" >&2
+	exit 64
+fi
+if ! command -v aa-exec >/dev/null 2>&1; then
+	echo "vtx-sandbox: aa-exec not found (install apparmor-utils)" >&2
+	exit 1
+fi
+exec aa-exec -p vertexos-dev-sandbox -- "$@"

@@ -1,0 +1,40 @@
+#!/bin/sh
+# VertexOS AIDE adapter.
+#
+# Runs an integrity check and NORMALIZES AIDE's native report into the
+# `added:/removed:/changed: <path>` lines that VertexSense tails at
+# /var/log/aide/aide.log. On first run (no baseline DB) it initializes one.
+#
+# Installed at /usr/local/bin/vtx-aide-check; invoked by the vtx-aide runit svc.
+set -eu
+
+CONF=/etc/aide.conf
+LOG=/var/log/aide/aide.log
+DB=/var/lib/aide/aide.db
+
+mkdir -p /var/lib/aide /var/log/aide
+
+if ! command -v aide >/dev/null 2>&1; then
+	echo "removed: (aide binary not installed)" >>"$LOG"
+	exit 0
+fi
+
+# First run: build the baseline and stop (nothing to compare against yet).
+if [ ! -f "$DB" ]; then
+	aide --init -c "$CONF" >/dev/null 2>&1 || true
+	[ -f /var/lib/aide/aide.db.new ] && mv /var/lib/aide/aide.db.new "$DB"
+	echo "added: (AIDE baseline initialized)" >>"$LOG"
+	exit 0
+fi
+
+# Compare, then translate AIDE's sectioned report into normalized event lines.
+aide --check -c "$CONF" 2>/dev/null | awk '
+	/^Added entries:/   { m="added";   next }
+	/^Removed entries:/ { m="removed"; next }
+	/^Changed entries:/ { m="changed"; next }
+	/^[A-Za-z].*:[[:space:]]*$/ { m=""; next }   # leave a section on the next header/blank
+	m != "" && index($0, ": /") {
+		p = $0; sub(/^.*: /, "", p)
+		if (p ~ /^\//) print m ": " p
+	}
+' >>"$LOG"

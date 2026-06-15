@@ -1,0 +1,10 @@
+#!/bin/sh
+# runit service: periodic AIDE integrity check.
+# Normalized output lands in /var/log/aide/aide.log for VertexSense to render.
+# Interval defaults to 6h; override via AIDE_INTERVAL (seconds).
+exec 2>&1
+INTERVAL="${AIDE_INTERVAL:-21600}"
+while true; do
+	/usr/local/bin/vtx-aide-check || true
+	sleep "$INTERVAL"
+done

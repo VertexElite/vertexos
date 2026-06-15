@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=VertexSense
+Comment=VertexOS security telemetry dashboard
+Exec=xfce4-terminal --title=VertexSense -e vertexsense
+Terminal=false
+Icon=vertexos-logo
+Categories=System;Security;Monitor;

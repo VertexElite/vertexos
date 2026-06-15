@@ -28,10 +28,12 @@ func main() {
 		nftPath   = flag.String("nftlog", collector.DefaultNftLog, "kernel log path for nftables drops")
 		nftPrefix = flag.String("nftprefix", collector.DefaultNftPrefix, "nftables log prefix to match")
 		aidePath  = flag.String("aide", collector.DefaultAideLog, "AIDE report log path")
+		auditPath = flag.String("auditd", collector.DefaultAuditLog, "auditd log path")
 	)
 	flag.Parse()
 
 	cols := []collector.Collector{
+		collector.NewAuditd(*auditPath), // primary host sensor on VertexOS
 		collector.NewFalco(*falcoPath),
 		collector.NewSuricata(*suriPath),
 		collector.NewNftables(*nftPath, *nftPrefix),
