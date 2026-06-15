@@ -18,7 +18,6 @@ linux
 linux-firmware-amd
 linux-firmware-intel
 apparmor
-apparmor-utils
 audit
 nftables
 stubby
