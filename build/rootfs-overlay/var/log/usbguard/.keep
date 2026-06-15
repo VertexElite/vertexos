@@ -1,0 +1,1 @@
+# keeps /var/log/usbguard present in the image; usbguard FileAudit log lands here.

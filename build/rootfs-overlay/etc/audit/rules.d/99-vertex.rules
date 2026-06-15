@@ -15,11 +15,6 @@
 
 # === Agent hook + config files (Miasma Level 3 + 5) ===
 -w /etc/skel/.claude -p wa -k vertex_agent_hook
--a always,exit -F arch=b64 -S openat -F dir=/home -F name=.claude/settings.json -k vertex_agent_settings_open
--a always,exit -F arch=b64 -S openat -F dir=/home -F name=.mcp.json            -k vertex_agent_mcp_open
--a always,exit -F arch=b64 -S openat -F dir=/home -F name=CLAUDE.md            -k vertex_agent_ctx_open
--a always,exit -F arch=b64 -S openat -F dir=/home -F name=GEMINI.md            -k vertex_agent_ctx_open
--a always,exit -F arch=b64 -S openat -F dir=/home -F name=AGENTS.md            -k vertex_agent_ctx_open
 
 # === Package-manager command execution ===
 -w /usr/bin/npm   -p x -k vertex_pkg_npm

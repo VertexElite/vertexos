@@ -1,0 +1,18 @@
+#!/bin/sh
+# VertexOS security-arm one-shot: resiliently arm the runtime sensors so a single
+# bad audit rule or complain-mode profile can never silently disarm the box.
+# (Root-caused by the 2026-06-15 white-team test: auditctl aborts the whole ruleset
+#  at the first watch on a missing path; AppArmor profiles were loading in complain.)
+sleep 4
+# 1) Load EACH audit rule independently — a failing rule only drops itself.
+if command -v auditctl >/dev/null 2>&1; then
+  grep -hE '^-' /etc/audit/rules.d/*.rules 2>/dev/null | while IFS= read -r r; do
+    auditctl $r >/dev/null 2>&1
+  done
+fi
+# 2) Force every loaded AppArmor profile into ENFORCE mode.
+if command -v aa-enforce >/dev/null 2>&1; then
+  aa-enforce /etc/apparmor.d/* >/dev/null 2>&1
+fi
+# stay supervised + idle (re-arms on each supervisor (re)start / boot)
+exec tail -f /dev/null
