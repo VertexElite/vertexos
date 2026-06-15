@@ -44,7 +44,7 @@ slab_nomerge init_on_alloc=1 init_on_free=1 page_alloc.shuffle=1 \
 randomize_kstack_offset=on vsyscall=none debugfs=off \
 ipv6.disable=0 module.sig_enforce=0 \
 rd.shell=0 rd.emergency=halt panic=10 oops=panic \
-live.user=vertex live.autologin"
+live.user=vertex"
 #   apparmor=1 security=apparmor: ensure AppArmor LSM active (CVE-2026-23268..23411 etc)
 #   lockdown=integrity: block kernel image modification post-boot
 #   slab_nomerge: each kmem_cache is unique (mitigates cross-cache exploits)
@@ -56,7 +56,7 @@ live.user=vertex live.autologin"
 #   module.sig_enforce=0: live ISO needs unsigned mods for hardware probing; install-time will toggle on
 #   rd.shell=0 rd.emergency=halt: block initramfs debug shell (Secure Boot bypass class)
 #   panic=10 oops=panic: hang on panic for inspection; never silently recover
-#   live.user=vertex live.autologin: dracut adduser pulls username from kernel cmdline
+#   live.user=vertex: dracut adduser pulls username from kernel cmdline
 
 EXTRA_PKGS=$(grep -vE '^\s*(#|$)' "$ROOT/build/packages.txt" | tr '\n' ' ')
 DATE=$(date +%Y%m%d)
