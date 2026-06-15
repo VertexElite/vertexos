@@ -1,0 +1,166 @@
+# VertexOS Falco ruleset — runtime detection tuned for the two threats that
+# actually matter on a developer/agent workstation:
+#
+#   1. SUPPLY-CHAIN COMPROMISE — a malicious dependency's install/postinstall
+#      script (npm/pip/cargo/...) stealing credentials, fetching a second stage,
+#      mining, or establishing persistence.
+#   2. AI CODING-AGENT ABUSE — an agent (or a prompt-injected/compromised one)
+#      reading secrets, opening a reverse shell, or persisting itself.
+#
+# Output is JSON to /var/log/falco/events.json (json_output: true), which
+# VertexSense tails and renders live. Install at /etc/falco/rules.d/.
+#
+# NOTE: alpha tuning. Conditions are deliberately conservative; expect to add
+# allow-list exceptions per workload once running on real traffic.
+
+- required_engine_version: 0.31.0
+
+# ─────────────────────────── lists ───────────────────────────
+- list: vtx_package_managers
+  items: [npm, pnpm, yarn, npx, pip, pip3, pipx, uv, poetry, gem, bundle, cargo, deno, bun, composer, go]
+
+- list: vtx_shells
+  items: [sh, bash, zsh, dash, ash, ksh, fish, csh]
+
+- list: vtx_net_tools
+  items: [nc, ncat, netcat, socat, telnet, curl, wget, scp, sftp]
+
+- list: vtx_coding_agents
+  items: [node, deno, bun, python, python3, claude, claude-code, codex, cursor, ollama]
+
+- list: vtx_pkg_system_tools
+  items: [xbps-install, xbps-reconfigure, xbps-pkgdb, dpkg, apt, systemctl, runit, sv]
+
+- list: vtx_shadow_readers
+  items: [unix_chkpwd, passwd, sshd, login, su, sudo, systemd, agetty, lightdm]
+
+# ─────────────────────────── macros ───────────────────────────
+- macro: vtx_spawn
+  condition: (evt.type in (execve, execveat) and evt.dir=<)
+
+- macro: vtx_read
+  condition: (evt.type in (open, openat, openat2) and evt.is_open_read=true and fd.typechar='f')
+
+- macro: vtx_write
+  condition: (evt.type in (open, openat, openat2) and evt.is_open_write=true and fd.typechar='f')
+
+# Is the current process inside a package-manager process tree (postinstall etc.)?
+- macro: vtx_under_pkg_manager
+  condition: >
+    (proc.pname in (vtx_package_managers) or
+     proc.aname[2] in (vtx_package_managers) or
+     proc.aname[3] in (vtx_package_managers) or
+     proc.aname[4] in (vtx_package_managers))
+
+# Is the current process inside an AI coding-agent process tree?
+- macro: vtx_under_agent
+  condition: >
+    (proc.pname in (vtx_coding_agents) or
+     proc.aname[2] in (vtx_coding_agents) or
+     proc.aname[3] in (vtx_coding_agents) or
+     proc.aname[4] in (vtx_coding_agents))
+
+- macro: vtx_cred_files
+  condition: >
+    (fd.name contains "/.ssh/id_" or
+     fd.name contains "/.aws/credentials" or
+     fd.name endswith "/.npmrc" or
+     fd.name endswith "/.netrc" or
+     fd.name endswith "/.pypirc" or
+     fd.name contains "/.config/gh/hosts.yml" or
+     fd.name contains "/.docker/config.json" or
+     fd.name contains "/.config/git/credentials" or
+     fd.name contains "/.gnupg/" or
+     fd.name endswith "/.env" or
+     fd.name contains "/Cookies" or
+     fd.name endswith "cookies.sqlite")
+
+- macro: vtx_persistence_files
+  condition: >
+    (fd.name startswith "/etc/cron" or
+     fd.name contains "/.config/autostart/" or
+     fd.name endswith "/.bashrc" or
+     fd.name endswith "/.bash_profile" or
+     fd.name endswith "/.profile" or
+     fd.name endswith "/.zshrc" or
+     fd.name startswith "/etc/profile.d/" or
+     fd.name contains "/.ssh/authorized_keys" or
+     fd.name contains "/.config/systemd/user/" or
+     fd.name contains "/.git/hooks/" or
+     fd.name=/etc/sudoers or
+     fd.name startswith "/etc/sudoers.d/" or
+     fd.name startswith "/etc/pam.d/")
+
+# ─────────────────────────── rules ───────────────────────────
+- rule: VTX Supply-chain net tool in package install
+  desc: A network/transfer tool ran inside a package-manager process tree — the classic malicious postinstall fetching a second stage or exfiltrating data.
+  condition: vtx_spawn and proc.name in (vtx_net_tools) and vtx_under_pkg_manager
+  output: "Supply-chain: net tool during package install (cmd=%proc.cmdline parent=%proc.pname user=%user.name cwd=%proc.cwd)"
+  priority: WARNING
+  tags: [supply_chain, vertexos, mitre_initial_access, T1195, T1059]
+
+- rule: VTX Package install reads credentials
+  desc: Code running under a package manager read SSH keys / cloud creds / tokens — supply-chain credential theft.
+  condition: vtx_read and vtx_cred_files and vtx_under_pkg_manager
+  output: "Supply-chain: credential read during package install (file=%fd.name proc=%proc.name parent=%proc.pname user=%user.name)"
+  priority: CRITICAL
+  tags: [supply_chain, credential_access, vertexos, T1552]
+
+- rule: VTX Coding agent reads credentials
+  desc: An AI coding agent (or a process it spawned) read credential material it should not need — possible prompt-injection or compromised agent.
+  condition: vtx_read and vtx_cred_files and vtx_under_agent and not vtx_under_pkg_manager
+  output: "Agent credential access (file=%fd.name proc=%proc.name parent=%proc.pname user=%user.name)"
+  priority: CRITICAL
+  tags: [agent, credential_access, vertexos, T1552]
+
+- rule: VTX Reverse shell pattern
+  desc: bash -i with /dev/tcp redirection, or nc/socat with command execution — an interactive reverse shell.
+  condition: >
+    vtx_spawn and
+    ((proc.name in (vtx_shells) and proc.cmdline contains "/dev/tcp/") or
+     (proc.name in (nc, ncat, socat) and (proc.cmdline contains " -e " or proc.cmdline contains "exec:")))
+  output: "Reverse shell launched (cmd=%proc.cmdline parent=%proc.pname user=%user.name)"
+  priority: CRITICAL
+  tags: [agent, supply_chain, execution, vertexos, T1059]
+
+- rule: VTX Pipe to shell execution
+  desc: Downloaded content piped straight into a shell (curl ... | sh) — remote code execution / unverified install.
+  condition: vtx_spawn and proc.name in (vtx_shells) and proc.pname in (curl, wget)
+  output: "Pipe-to-shell exec (shell=%proc.name parent=%proc.pname cmd=%proc.cmdline user=%user.name)"
+  priority: WARNING
+  tags: [supply_chain, execution, vertexos, T1105, T1059]
+
+- rule: VTX Persistence write
+  desc: A write to an autostart / cron / shell-rc / systemd-user / sudoers / git-hook path — persistence or privilege manipulation.
+  condition: vtx_write and vtx_persistence_files and not proc.name in (vtx_pkg_system_tools)
+  output: "Persistence write (file=%fd.name proc=%proc.name parent=%proc.pname under_agent=%proc.aname[2] user=%user.name)"
+  priority: WARNING
+  tags: [persistence, supply_chain, agent, vertexos, T1547, T1053]
+
+- rule: VTX Setuid bit set
+  desc: A setuid bit was applied — a local privilege-escalation backdoor.
+  condition: (evt.type in (chmod, fchmod, fchmodat)) and evt.arg.mode contains "S_ISUID"
+  output: "Setuid bit set (file=%fd.name mode=%evt.arg.mode proc=%proc.name parent=%proc.pname user=%user.name)"
+  priority: ERROR
+  tags: [privilege_escalation, vertexos, T1548]
+
+- rule: VTX Execution from temp dir
+  desc: A binary executed from /tmp, /dev/shm or /var/tmp — common malware/second-stage staging.
+  condition: vtx_spawn and (proc.exepath startswith "/tmp/" or proc.exepath startswith "/dev/shm/" or proc.exepath startswith "/var/tmp/")
+  output: "Exec from temp dir (exe=%proc.exepath cmd=%proc.cmdline parent=%proc.pname user=%user.name)"
+  priority: WARNING
+  tags: [execution, supply_chain, vertexos, T1059]
+
+- rule: VTX Crypto miner indicator
+  desc: A known miner binary launched, or a stratum pool connection string appeared — resource hijack via a malicious dependency.
+  condition: vtx_spawn and (proc.name in (xmrig, minerd, cpuminer, ethminer, nbminer) or proc.cmdline contains "stratum+tcp")
+  output: "Crypto miner indicator (cmd=%proc.cmdline parent=%proc.pname user=%user.name)"
+  priority: CRITICAL
+  tags: [supply_chain, impact, vertexos, T1496]
+
+- rule: VTX Shadow file read
+  desc: A non-authentication process read /etc/shadow.
+  condition: vtx_read and fd.name=/etc/shadow and not proc.name in (vtx_shadow_readers)
+  output: "/etc/shadow read by unexpected process (proc=%proc.name parent=%proc.pname user=%user.name)"
+  priority: CRITICAL
+  tags: [credential_access, vertexos, T1003]

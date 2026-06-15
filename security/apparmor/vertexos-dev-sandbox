@@ -1,0 +1,82 @@
+# VertexOS AppArmor profile — "dev sandbox" for running an AI coding agent (or any
+# untrusted build/dependency) with the crown jewels out of reach.
+#
+# Philosophy: the agent gets a normal dev environment (read system, run toolchains,
+# read/write its workspace + caches, use the network) but is DENIED the two things a
+# prompt-injected or supply-chain-compromised agent abuses:
+#   • reading credential stores (SSH/AWS/GPG/gh tokens, browser cookies, .env)
+#   • writing persistence (shell rc, autostart, cron, sudoers, authorized_keys)
+#
+# Tradeoff: git-over-SSH won't work *inside* the sandbox (by design — the agent
+# doesn't get your keys). Push from an unconfined shell, or use a scoped token.
+#
+# Install: /etc/apparmor.d/vertexos-dev-sandbox
+# Launch:  vtx-sandbox <command>      (wrapper does: aa-exec -p vertexos-dev-sandbox -- "$@")
+# Start in complain mode (logs, doesn't block):  aa-complain vertexos-dev-sandbox
+# Enforce when ready:                            aa-enforce  vertexos-dev-sandbox
+
+abi <abi/3.0>,
+include <tunables/global>
+
+profile vertexos-dev-sandbox flags=(attach_disconnected,mediate_deleted) {
+  include <abstractions/base>
+  include <abstractions/nameservice>
+  include <abstractions/openssl>
+
+  # Network: agents need it (package installs, APIs).
+  network inet stream,
+  network inet6 stream,
+  network inet dgram,
+  network inet6 dgram,
+
+  # Read-only system + executable toolchains.
+  /usr/** r,
+  /etc/** r,
+  /opt/** r,
+  /{,usr/}{,local/}bin/** rix,
+  /{,usr/}{,local/}lib/** rm,
+  /usr/local/go/** rix,
+
+  # Workspace + build caches: the only broad read/write.
+  owner @{HOME}/ r,
+  owner @{HOME}/projects/** rwkl,
+  owner @{HOME}/src/** rwkl,
+  owner @{HOME}/.cache/** rwkl,
+  owner @{HOME}/.npm/** rwkl,
+  owner @{HOME}/.cargo/** rwkl,
+  owner @{HOME}/go/** rwkl,
+  owner /tmp/** rwkl,
+  owner /dev/shm/** rwkl,
+  /dev/{null,zero,full,random,urandom,tty,pts/*} rw,
+
+  # ── DENY: credential exfiltration (takes precedence over the allows above) ──
+  deny owner @{HOME}/.ssh/** mrwklx,
+  deny owner @{HOME}/.aws/** mrwklx,
+  deny owner @{HOME}/.gnupg/** mrwklx,
+  deny owner @{HOME}/.config/gh/** mrwklx,
+  deny owner @{HOME}/.docker/config.json mrwklx,
+  deny owner @{HOME}/.config/git/credentials mrwklx,
+  deny owner @{HOME}/.netrc mrwklx,
+  deny owner @{HOME}/**/.env r,
+  deny owner @{HOME}/.mozilla/**/cookies.sqlite mrwklx,
+  deny owner @{HOME}/.config/*/Cookies mrwklx,
+
+  # ── DENY: persistence + privilege manipulation ──
+  deny owner @{HOME}/.bashrc w,
+  deny owner @{HOME}/.bash_profile w,
+  deny owner @{HOME}/.profile w,
+  deny owner @{HOME}/.zshrc w,
+  deny owner @{HOME}/.config/autostart/** w,
+  deny owner @{HOME}/.config/systemd/user/** w,
+  deny owner @{HOME}/.ssh/authorized_keys w,
+  deny /etc/cron*/** w,
+  deny /etc/sudoers* w,
+  deny /etc/profile.d/** w,
+  deny /etc/pam.d/** w,
+
+  # No raw mounts / kernel modules / ptrace of other procs from the sandbox.
+  deny mount,
+  deny umount,
+  deny capability sys_module,
+  deny ptrace (trace) peer=/usr/bin/**,
+}

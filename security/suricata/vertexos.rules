@@ -1,0 +1,28 @@
+# VertexOS Suricata rules — network-side detection for supply-chain exfiltration,
+# crypto-mining, and scripted download/C2 patterns. SIDs in the local 9.1M range.
+# Alerts land in eve.json (see suricata.yaml note in README) which VertexSense tails.
+
+# Crypto-mining pool handshake (stratum mining.subscribe).
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"VTX Crypto-mining stratum handshake"; flow:established,to_server; content:"mining.subscribe"; nocase; classtype:policy-violation; priority:1; sid:9100001; rev:1;)
+
+# Data uploaded to anonymous file-drop / paste hosts (exfil).
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"VTX Upload to anonymous file-drop host"; flow:established,to_server; http.method; content:"POST"; http.host; pcre:"/(transfer\.sh|0x0\.st|file\.io|anonfiles|gofile\.io|paste\.ee|ix\.io)/i"; classtype:data-theft; priority:1; sid:9100002; rev:1;)
+alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"VTX TLS to anonymous file-drop host"; tls.sni; pcre:"/(transfer\.sh|0x0\.st|file\.io|gofile\.io|anonfiles)/i"; classtype:data-theft; priority:1; sid:9100003; rev:1;)
+
+# Shell/script fetched over cleartext HTTP with a CLI user-agent (pipe-to-shell installer).
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"VTX Script fetched over HTTP by CLI tool"; flow:established,to_server; http.method; content:"GET"; http.uri; pcre:"/\.(sh|ps1|py)(\?|$)/i"; http.user_agent; pcre:"/(curl|wget)/i"; classtype:policy-violation; priority:2; sid:9100004; rev:1;)
+
+# Scripted POST with an automation user-agent (possible agent/dependency exfil).
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"VTX Scripted POST (automation user-agent)"; flow:established,to_server; http.method; content:"POST"; http.user_agent; pcre:"/(python-requests|Go-http-client|node-fetch|axios|libwww-perl|okhttp)/i"; classtype:policy-violation; priority:3; sid:9100005; rev:1;)
+
+# Package fetched from a raw IP host (registries are hostnames; raw IP = suspicious).
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"VTX Package fetch from raw-IP host"; flow:established,to_server; http.host; pcre:"/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/"; http.user_agent; pcre:"/(npm|pip|yarn|pnpm|cargo|pythonpkg)/i"; classtype:policy-violation; priority:2; sid:9100006; rev:1;)
+
+# DNS to dynamic-DNS / tunnelling-friendly hosts (C2 / egress).
+alert dns $HOME_NET any -> any any (msg:"VTX DNS query to dynamic-DNS/tunnel host"; dns.query; pcre:"/\.(duckdns\.org|no-ip\.|hopto\.org|ngrok\.io|serveo\.net|trycloudflare\.com)/i"; classtype:bad-unknown; priority:2; sid:9100007; rev:1;)
+
+# Very long DNS label — possible DNS tunnelling / data exfil.
+alert dns $HOME_NET any -> any any (msg:"VTX Possible DNS tunnelling (long label)"; dns.query; pcre:"/^[a-z0-9+\/=_-]{52,}\./i"; classtype:bad-unknown; priority:3; sid:9100008; rev:1;)
+
+# Outbound to common reverse-shell / C2 ports (heuristic — noisy, enable per env).
+#alert tcp $HOME_NET any -> $EXTERNAL_NET [4444,1337,9001,8081] (msg:"VTX Outbound to common C2 port"; flow:established,to_server; classtype:trojan-activity; priority:2; sid:9100009; rev:1;)
