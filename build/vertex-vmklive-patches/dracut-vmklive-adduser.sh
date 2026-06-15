@@ -43,7 +43,11 @@ chroot ${NEWROOT} useradd -m -c $USERNAME -G audio,video,wheel,kvm,plugdev,input
 # autologin via PAM kicks in first via /etc/pam.d/lightdm-autologin so the
 # password prompt should NOT appear for desktop boot, but is still set as
 # a fallback for tty + SSH if user disables autologin.
-chroot ${NEWROOT} sh -c "echo '${USERNAME}:${USERNAME}' | chpasswd"
+# Set the live password via a precomputed SHA512 hash written straight to
+# /etc/shadow (usermod -p). chpasswd authenticates via PAM, which is NOT
+# wired up in this early initramfs chroot, so it silently fails to set the
+# hash (login then rejects vertex/vertex). usermod -p edits shadow directly.
+chroot ${NEWROOT} usermod -p '$6$A3Q1CAXa5oT1w7U1$//wU8J/sIkXg4S1vaVpiAKzgKkGW4xLpDVAGW9swXQXFWVQTsWKmMWbO8w0f0z331.WaCq4w13aTzq5xV21pr1' ${USERNAME}
 
 # Lock root password. No hardcoded default — live ISOs with known root
 # passwords are a regular boot-and-pwn target on shared LANs. Users who
