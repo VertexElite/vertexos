@@ -11,3 +11,4 @@ auth       include    system-auth
 account    include    system-auth
 password   include    system-auth
 session    include    system-auth
+-session   optional   pam_elogind.so

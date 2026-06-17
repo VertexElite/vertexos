@@ -10,5 +10,6 @@ auth      required    pam_permit.so
 account   include     system-auth
 
 session   include     system-auth
+-session   optional   pam_elogind.so
 
 password  include     system-auth
