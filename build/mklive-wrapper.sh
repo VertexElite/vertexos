@@ -80,7 +80,7 @@ echo "    Patches: $(ls $PATCHES | wc -l) vmklive patches"
 echo "    Out:     $OUT_DIR/$OUT_NAME"
 echo
 
-docker run --rm --privileged \
+docker run --rm --privileged --network host \
     -v "$ROOT/build/void-mklive:/mklive" \
     -v "$OUT_DIR:/out" \
     -v "$OVERLAY:/overlay:ro" \
