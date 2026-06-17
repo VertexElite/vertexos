@@ -89,4 +89,4 @@ efibootmgr
 
 # === Agent sandbox (roadmap B: auto-wrap + FUSE context-seal) ===
 fuse3
-vtx-ctx-seal
+# vtx-ctx-seal: ships as a musl-compiled overlay binary in a follow-up (not an xbps repo pkg)
