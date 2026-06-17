@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=VertexOS Wallpaper
+Comment=Apply the VertexOS branded desktop wallpaper
+Exec=vtx-wallpaper
+Terminal=false
+NoDisplay=true
+OnlyShowIn=XFCE;
+X-XFCE-Autostart-Override=true

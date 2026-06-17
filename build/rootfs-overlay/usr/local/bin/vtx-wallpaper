@@ -1,0 +1,33 @@
+#!/bin/sh
+# Apply the VertexOS branded wallpaper to whatever monitor connector XFCE uses.
+# (xfce4-desktop.xml keys backdrops by exact connector name; this covers any.)
+IMG=/usr/share/backgrounds/vertexos/wallpaper-02-shield.png
+[ -f "$IMG" ] || exit 0
+command -v xfconf-query >/dev/null 2>&1 || exit 0
+
+set_bg() {
+    xfconf-query -c xfce4-desktop -p "$1" -n -t string -s "$IMG" 2>/dev/null \
+        || xfconf-query -c xfce4-desktop -p "$1" -t string -s "$IMG" 2>/dev/null
+}
+
+# Wait for xfdesktop to publish backdrop keys.
+n=0
+while [ "$n" -lt 8 ]; do
+    found=$(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep '/last-image$')
+    [ -n "$found" ] && break
+    n=$((n + 1)); sleep 1
+done
+
+# Set every backdrop key xfdesktop knows about.
+echo "$found" | while read -r p; do
+    [ -n "$p" ] && set_bg "$p"
+done
+
+# Also cover every xrandr-connected output (first boot may have no key yet).
+for c in $(xrandr 2>/dev/null | awk '/ connected/{print $1}'); do
+    set_bg "/backdrop/screen0/monitor$c/workspace0/last-image"
+    xfconf-query -c xfce4-desktop -p "/backdrop/screen0/monitor$c/workspace0/image-style" -n -t int -s 5 2>/dev/null
+done
+
+xfdesktop --reload 2>/dev/null
+exit 0
