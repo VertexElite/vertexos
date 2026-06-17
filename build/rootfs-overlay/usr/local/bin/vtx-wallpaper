@@ -1,33 +1,37 @@
 #!/bin/sh
-# Apply the VertexOS branded wallpaper to whatever monitor connector XFCE uses.
-# (xfce4-desktop.xml keys backdrops by exact connector name; this covers any.)
+# Apply the VertexOS branded wallpaper to whatever monitor connector is live.
+# Derives the connector from the kernel (/sys/class/drm) so it needs no xrandr,
+# and works on any GPU (VBox VGA-1, real eDP-1/HDMI-*/DP-*, etc.).
+LOG=/tmp/vtx-wp.log
+exec >>"$LOG" 2>&1
+echo "=== vtx-wallpaper run ==="
 IMG=/usr/share/backgrounds/vertexos/wallpaper-02-shield.png
-[ -f "$IMG" ] || exit 0
-command -v xfconf-query >/dev/null 2>&1 || exit 0
+[ -f "$IMG" ] || { echo "no image"; exit 0; }
+command -v xfconf-query >/dev/null 2>&1 || { echo "no xfconf-query"; exit 0; }
 
 set_bg() {
-    xfconf-query -c xfce4-desktop -p "$1" -n -t string -s "$IMG" 2>/dev/null \
-        || xfconf-query -c xfce4-desktop -p "$1" -t string -s "$IMG" 2>/dev/null
+    echo "  set $1"
+    xfconf-query -c xfce4-desktop -p "/backdrop/screen0/$1/workspace0/last-image" -n -t string -s "$IMG" 2>/dev/null \
+        || xfconf-query -c xfce4-desktop -p "/backdrop/screen0/$1/workspace0/last-image" -t string -s "$IMG" 2>/dev/null
+    xfconf-query -c xfce4-desktop -p "/backdrop/screen0/$1/workspace0/image-style" -n -t int -s 5 2>/dev/null
 }
 
-# Wait for xfdesktop to publish backdrop keys.
-n=0
-while [ "$n" -lt 8 ]; do
-    found=$(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep '/last-image$')
-    [ -n "$found" ] && break
-    n=$((n + 1)); sleep 1
+sleep 4   # let xfdesktop come up
+
+# Connected outputs from DRM:  card0-VGA-1 -> VGA-1 -> monitorVGA-1
+for s in /sys/class/drm/*/status; do
+    [ -r "$s" ] || continue
+    [ "$(cat "$s" 2>/dev/null)" = "connected" ] || continue
+    b=${s%/status}; b=${b##*/}      # card0-VGA-1
+    name=${b#*-}                    # VGA-1
+    [ -n "$name" ] && [ "$name" != "$b" ] && set_bg "monitor$name"
 done
 
-# Set every backdrop key xfdesktop knows about.
-echo "$found" | while read -r p; do
-    [ -n "$p" ] && set_bg "$p"
-done
-
-# Also cover every xrandr-connected output (first boot may have no key yet).
-for c in $(xrandr 2>/dev/null | awk '/ connected/{print $1}'); do
-    set_bg "/backdrop/screen0/monitor$c/workspace0/last-image"
-    xfconf-query -c xfce4-desktop -p "/backdrop/screen0/monitor$c/workspace0/image-style" -n -t int -s 5 2>/dev/null
+# Re-assert any monitor keys xfdesktop already created.
+for p in $(xfconf-query -c xfce4-desktop -l 2>/dev/null | sed -n 's,^/backdrop/screen0/\(monitor[^/]*\)/workspace0/last-image$,\1,p'); do
+    set_bg "$p"
 done
 
 xfdesktop --reload 2>/dev/null
+echo "done"
 exit 0
