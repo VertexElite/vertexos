@@ -15,4 +15,7 @@ if ! command -v aa-exec >/dev/null 2>&1; then
 	echo "vtx-sandbox: aa-exec not found (install apparmor-utils)" >&2
 	exit 1
 fi
+# Mark the environment so auto-wrap shims (vtx-agent-shim) don't re-wrap a process
+# that's already confined — prevents recursion when an agent spawns another agent.
+export VTX_SANDBOXED=1
 exec aa-exec -p vertexos-dev-sandbox -- "$@"

@@ -1,0 +1,78 @@
+#!/bin/sh
+# vtx-autowrap — manage transparent agent sandboxing for the current user.
+# Creates per-user shims in ~/.local/bin that route coding agents through
+# vtx-sandbox automatically, so "claude"/"gemini"/… are confined by default.
+#
+#   vtx-autowrap on        wrap every installed agent
+#   vtx-autowrap off       remove all shims
+#   vtx-autowrap sync      re-wrap (run after installing a new agent)
+#   vtx-autowrap status    show what's wrapped + where each real binary lives
+#
+# Agent set: /etc/vertexos/autowrap.conf (one name per line, # comments) or the
+# built-in default below.
+set -eu
+
+SHIM=/usr/local/bin/vtx-agent-shim
+BINDIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
+CONF=/etc/vertexos/autowrap.conf
+DEFAULT_AGENTS="claude gemini cursor codex aider continue cline goose qwen"
+
+list_agents() {
+  if [ -r "$CONF" ]; then
+    grep -vE '^[[:space:]]*#|^[[:space:]]*$' "$CONF"
+  else
+    echo "$DEFAULT_AGENTS"
+  fi
+}
+
+# Real binary for an agent name, ignoring our own shim dir + shim links.
+real_of() {
+  _n="$1"; _r=""; _oIFS="$IFS"; IFS=:
+  for d in $PATH; do
+    [ -n "$d" ] || continue
+    case "$d" in "$BINDIR") continue ;; esac
+    [ -x "$d/$_n" ] || continue
+    _t="$(readlink -f "$d/$_n" 2>/dev/null || echo "$d/$_n")"
+    case "$_t" in */vtx-agent-shim) continue ;; esac
+    _r="$d/$_n"; break
+  done
+  IFS="$_oIFS"; echo "$_r"
+}
+
+path_warn() {
+  case ":$PATH:" in
+    *":$BINDIR:"*) ;;
+    *) echo "NOTE: $BINDIR is not in PATH — shims won't take precedence. Add:"
+       echo "      export PATH=\"$BINDIR:\$PATH\"   (already set in VertexOS /etc/skel)";;
+  esac
+}
+
+case "${1:-status}" in
+  on|sync)
+    [ -x "$SHIM" ] || { echo "vtx-autowrap: $SHIM missing — is the overlay installed?" >&2; exit 1; }
+    mkdir -p "$BINDIR"; n=0
+    for a in $(list_agents); do
+      r="$(real_of "$a")"
+      if [ -n "$r" ]; then ln -sf "$SHIM" "$BINDIR/$a"; n=$((n+1)); echo "  wrapped  $a -> $r"; fi
+    done
+    [ "$n" -gt 0 ] || echo "  (no known agents installed yet — run 'vtx-autowrap sync' after installing one)"
+    path_warn
+    ;;
+  off)
+    for a in $(list_agents); do
+      l="$BINDIR/$a"
+      if [ -L "$l" ] && [ "$(readlink "$l")" = "$SHIM" ]; then rm -f "$l"; echo "  unwrapped $a"; fi
+    done
+    ;;
+  status)
+    echo "shim:   $SHIM ($([ -x "$SHIM" ] && echo present || echo MISSING))"
+    echo "bindir: $BINDIR"
+    for a in $(list_agents); do
+      l="$BINDIR/$a"; r="$(real_of "$a")"
+      if [ -L "$l" ] && [ "$(readlink "$l")" = "$SHIM" ]; then st="WRAPPED"; else st="-"; fi
+      printf "  %-10s %-8s real=%s\n" "$a" "$st" "${r:-<not installed>}"
+    done
+    path_warn
+    ;;
+  *) echo "usage: vtx-autowrap {on|off|sync|status}" >&2; exit 64 ;;
+esac

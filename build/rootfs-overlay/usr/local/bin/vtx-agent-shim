@@ -1,0 +1,48 @@
+#!/bin/sh
+# vtx-agent-shim — transparent auto-wrap for coding agents.
+# Invoked via a symlink named after an agent (claude/gemini/cursor/codex/aider…).
+# Re-execs the REAL agent binary under vtx-sandbox so agents run confined BY
+# DEFAULT — no per-command opt-in. Part of VertexOS's "safely run agents" mission.
+#
+#   ln -s /usr/local/bin/vtx-agent-shim ~/.local/bin/claude
+#   claude            ->  vtx-sandbox <real claude> …   (secrets sealed)
+#
+# Escape hatch:  VTX_NO_SANDBOX=1 claude     (run unconfined, explicit + auditable)
+# Loop guard:    vtx-sandbox exports VTX_SANDBOXED=1 -> shim runs the real bin directly.
+set -eu
+
+self="$(basename "$0")"
+shimdir="$(cd "$(dirname "$0")" && pwd)"
+
+# Resolve the REAL binary: first executable named "$self" in PATH that is NOT in
+# our shim dir and NOT itself a link back to this shim (prevents infinite recursion).
+real=""
+oIFS="$IFS"; IFS=:
+for d in $PATH; do
+  [ -n "$d" ] || continue
+  case "$d" in "$shimdir") continue ;; esac
+  cand="$d/$self"
+  [ -x "$cand" ] || continue
+  target="$(readlink -f "$cand" 2>/dev/null || echo "$cand")"
+  case "$target" in */vtx-agent-shim) continue ;; esac
+  real="$cand"; break
+done
+IFS="$oIFS"
+
+if [ -z "$real" ]; then
+  echo "vtx-agent-shim: real '$self' not found in PATH (nothing to wrap)" >&2
+  exit 127
+fi
+
+# Already inside the sandbox, or explicit opt-out -> run the real agent directly.
+if [ -n "${VTX_SANDBOXED:-}" ] || [ -n "${VTX_NO_SANDBOX:-}" ]; then
+  exec "$real" "$@"
+fi
+
+# Confine: vtx-sandbox layers AppArmor + (when present) the FUSE context-seal.
+if command -v vtx-sandbox >/dev/null 2>&1; then
+  exec vtx-sandbox "$real" "$@"
+fi
+
+echo "vtx-agent-shim: vtx-sandbox not found; running '$self' UNCONFINED" >&2
+exec "$real" "$@"
