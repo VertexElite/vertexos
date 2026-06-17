@@ -1,0 +1,15 @@
+#!/bin/sh
+# Install VertexOS — desktop entry point to the installer (live ISO).
+# For now this launches the proven text installer in a terminal; the graphical
+# wizard (Calamares srcpkg or a GTK front-end) will replace the Exec later
+# without changing the .desktop launcher.
+set -eu
+if ! command -v void-installer >/dev/null 2>&1; then
+    echo "void-installer not found (are you on the live ISO?)" >&2
+    exit 1
+fi
+term="$(command -v xfce4-terminal || command -v xterm || echo '')"
+if [ -n "$term" ]; then
+    exec "$term" --title="Install VertexOS" -e "sh -c 'sudo void-installer; echo; printf \"\\nInstall finished — press Enter to close.\"; read _'"
+fi
+exec sudo void-installer
