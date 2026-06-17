@@ -1,0 +1,9 @@
+if [ -x /sbin/agetty -o -x /bin/agetty ]; then
+	# VertexOS live: auto-login 'vertex' on tty1 so it boots straight to the desktop.
+	if [ "${tty}" = "tty1" ]; then
+		GETTY_ARGS="--autologin vertex --noclear"
+	fi
+fi
+
+BAUD_RATE=38400
+TERM_NAME=linux
