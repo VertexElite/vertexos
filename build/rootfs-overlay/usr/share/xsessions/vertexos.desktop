@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=VertexOS
+Comment=VertexOS hardened XFCE session
+Exec=vtx-session
+TryExec=vtx-session
+Icon=vertexos-logo
+Type=XSession
