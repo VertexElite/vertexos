@@ -1,0 +1,32 @@
+# Template file for 'vtx-ctx-seal'
+#
+# VertexOS FUSE context-seal — a passthrough fs that redacts credential paths
+# (.ssh/.aws/.gnupg/.config/gh/.env/...) from a sandboxed coding agent. Built
+# from a vendored single-file source (files/vtx-ctx-seal.c), no distfiles.
+#
+# Why it ships as its own pkg: it links dynamically against libfuse3 (musl), so
+# it must build in the Void tree — it can't be a static drop-in like vertexsense.
+pkgname=vtx-ctx-seal
+version=0.1.0
+revision=1
+short_desc="VertexOS FUSE context-seal (redacts credential paths from sandboxed agents)"
+maintainer="VertexElite <security@vertexelite.org>"
+license="MIT"
+homepage="https://github.com/VertexElite/vertexos"
+makedepends="fuse3-devel pkg-config"
+depends="fuse3"
+
+do_extract() {
+	mkdir -p "${wrksrc}"
+	cp "${FILESDIR}/vtx-ctx-seal.c" "${wrksrc}/vtx-ctx-seal.c"
+}
+
+do_build() {
+	: "${CC:=cc}"
+	${CC} ${CFLAGS} -O2 -Wall -o vtx-ctx-seal vtx-ctx-seal.c \
+		$(pkg-config fuse3 --cflags --libs) ${LDFLAGS}
+}
+
+do_install() {
+	vbin vtx-ctx-seal
+}

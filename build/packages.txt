@@ -86,3 +86,7 @@ usbutils
 grub-x86_64-efi
 grub-i386-efi
 efibootmgr
+
+# === Agent sandbox (roadmap B: auto-wrap + FUSE context-seal) ===
+fuse3
+vtx-ctx-seal

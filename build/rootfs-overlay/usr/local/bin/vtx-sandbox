@@ -1,10 +1,13 @@
 #!/bin/sh
-# Run a command under the VertexOS dev-sandbox AppArmor profile — credential
-# stores and persistence paths are out of reach for whatever runs inside.
+# Run a command under the VertexOS dev-sandbox: AppArmor profile (hard MAC) PLUS
+# the FUSE context-seal (presents a $HOME with credential dirs redacted). The two
+# layers are independent — the seal hides secrets from $HOME-relative discovery,
+# AppArmor is the hard backstop for absolute-path access.
 #
-#   vtx-sandbox claude          # run an agent with no access to your secrets
-#   vtx-sandbox npm install     # install deps with persistence writes blocked
+#   vtx-sandbox claude          # agent runs confined, secrets sealed
+#   vtx-sandbox npm install     # untrusted install, persistence writes blocked
 #
+# Knobs:  VTX_NO_SEAL=1  skip the FUSE seal (AppArmor only)
 # Installed at /usr/local/bin/vtx-sandbox.
 set -eu
 if [ "$#" -eq 0 ]; then
@@ -15,7 +18,41 @@ if ! command -v aa-exec >/dev/null 2>&1; then
 	echo "vtx-sandbox: aa-exec not found (install apparmor-utils)" >&2
 	exit 1
 fi
-# Mark the environment so auto-wrap shims (vtx-agent-shim) don't re-wrap a process
-# that's already confined — prevents recursion when an agent spawns another agent.
+# Mark the env so auto-wrap shims don't re-wrap an already-confined process.
 export VTX_SANDBOXED=1
+
+# ── FUSE context-seal (best-effort; degrades to AppArmor-only) ──
+# Mount a redacted mirror of $HOME under /tmp (the dev-sandbox profile allows
+# owner /tmp/** rwkl, so the confined agent can use it; /run/user is NOT allowed).
+seal_root=""
+if [ "${VTX_NO_SEAL:-0}" != "1" ] \
+   && command -v vtx-ctx-seal >/dev/null 2>&1 \
+   && [ -e /dev/fuse ] && [ -n "${HOME:-}" ]; then
+	cand="/tmp/vtx-seal.$(id -u).$$"
+	if mkdir -p "$cand/home" 2>/dev/null; then
+		if VTX_SEAL_SRC="$HOME" vtx-ctx-seal "$cand/home" >/dev/null 2>&1; then
+			seal_root="$cand"
+		else
+			rm -rf "$cand" 2>/dev/null || true
+		fi
+	fi
+fi
+
+cleanup() {
+	[ -n "$seal_root" ] || return 0
+	fusermount3 -u "$seal_root/home" 2>/dev/null || umount "$seal_root/home" 2>/dev/null || true
+	rm -rf "$seal_root" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
+if [ -n "$seal_root" ]; then
+	# Not exec'd: we run the agent as a child so the trap can unmount on exit.
+	HOME="$seal_root/home" aa-exec -p vertexos-dev-sandbox -- "$@"
+	rc=$?
+	cleanup
+	trap - EXIT INT TERM
+	exit "$rc"
+fi
+
+# No seal available — AppArmor-only path (exec is fine, nothing to clean up).
 exec aa-exec -p vertexos-dev-sandbox -- "$@"
