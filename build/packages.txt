@@ -7,6 +7,11 @@
 #   dbus, polkitd, gnome-themes-standard, gnome-keyring, gvfs-*, udisks2,
 #   xfce4-pulseaudio-plugin, firefox, void-installer (auto-bundled).
 # Plus services auto-enabled: dbus, lightdm, NetworkManager, polkitd.
+#
+# SLIMMED 2026-06-18 (glibc pivot): dropped recon/dev tooling that doesn't
+# belong in a clean user-facing install (wireshark, masscan, arp-scan,
+# netscanner, iftop, nethogs, bmon, tcpdump, mtr, rkhunter, chkrootkit,
+# firejail, tigervnc, xtools). Lean hardened desktop + security core only.
 
 # === Security core ===
 # Stock 'linux' 6.18 already ships every KSPP hardening flag Chimera's
@@ -23,18 +28,12 @@ nftables
 stubby
 usbguard
 
-# Detection / monitoring (Phase 2-3)
-# falco          # not yet packaged in Void; src build planned
-# suricata
-# zeek
-# ntopng
+# Detection / integrity (light + defensive; rootkit scanners dropped as
+# redundant with AIDE+clamav for a clean desktop)
 clamav
 aide
-rkhunter
-chkrootkit
-firejail
 
-# === Live system extras (mkiso xfce variant misses some) ===
+# === Disk / install essentials (void-installer needs these) ===
 parted
 gptfdisk
 cryptsetup
@@ -43,27 +42,12 @@ btrfs-progs
 exfatprogs
 sbctl
 
-# === GUI remote access ===
-# tigervnc lets installed-to-disk systems be reachable from VMs / headless
-# metal without needing a monitor attached.
-tigervnc
+# === Boot / firmware (xfce variant includes grub; we add EFI variants) ===
+grub-x86_64-efi
+grub-i386-efi
+efibootmgr
 
-# === Network analysis ===
-iftop
-nethogs
-bmon
-tcpdump
-wireshark
-# nmap is not packaged in Void; the following cover its roles:
-#   masscan    - fast async TCP port scanner
-#   arp-scan   - L2 LAN host discovery
-#   netscanner - modern TUI: discovery, port scan, packet capture
-masscan
-arp-scan
-netscanner
-mtr
-
-# === CLI tools (developer + admin) ===
+# === CLI essentials (admin + usability) ===
 git
 curl
 wget
@@ -74,7 +58,6 @@ tmux
 ripgrep
 fd
 jq
-xtools
 bash-completion
 sudo
 less
@@ -82,11 +65,6 @@ man-db
 pciutils
 usbutils
 
-# === Boot / firmware (xfce variant includes grub; we add EFI variants) ===
-grub-x86_64-efi
-grub-i386-efi
-efibootmgr
-
 # === Agent sandbox (roadmap B: auto-wrap + FUSE context-seal) ===
 fuse3
-# vtx-ctx-seal: ships as a musl-compiled overlay binary in a follow-up (not an xbps repo pkg)
+# vtx-ctx-seal: ships as a glibc-compiled overlay binary in a follow-up (not an xbps repo pkg)

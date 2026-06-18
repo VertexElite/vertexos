@@ -71,7 +71,7 @@
       VERTEX<tspan fill="#00c9a7">OS</tspan>
     </text>
     <text x="960" y="900" font-size="14" fill="#4a6080" letter-spacing="4">
-      SECURITY-HARDENED · VOID MUSL · SUPPLY-CHAIN DEFENSE
+      SECURITY-HARDENED · VOID GLIBC · SUPPLY-CHAIN DEFENSE
     </text>
   </g>
 </svg>

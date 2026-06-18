@@ -1,14 +1,7 @@
 #%PAM-1.0
-# VertexOS lightdm greeter PAM stack — the PASSWORD login path (used when
-# autologin is disabled or falls through to the greeter).
-#
-# Why this file exists: the lightdm package's default /etc/pam.d/lightdm includes
-# `system-login`, which pulls modules that are broken/absent on the musl Void
-# base — so greeter password auth fails with an error. We mirror the working
-# `lightdm-autologin` stack and include `system-auth` for every phase, which is
-# the aggregate that actually resolves on this base.
-auth       include    system-auth
-account    include    system-auth
-password   include    system-auth
-session    include    system-auth
--session   optional   pam_elogind.so
+# VertexOS lightdm greeter PAM (glibc). system-login pulls pam_elogind so the
+# greeter session gets a logind seat - fixes the musl-era greeter login loop.
+auth       include    system-login
+account    include    system-login
+password   include    system-login
+session    include    system-login

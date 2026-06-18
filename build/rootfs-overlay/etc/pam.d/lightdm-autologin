@@ -1,15 +1,8 @@
 #%PAM-1.0
-# VertexOS lightdm autologin PAM stack.
-# Allow members of the 'autologin' group to log in without password.
-# Without this file, lightdm falls back to pam_unix which requires a real
-# password — meaning autologin-user=vertex in lightdm.conf has no effect.
-
-auth      required    pam_succeed_if.so user ingroup autologin
-auth      required    pam_permit.so
-
-account   include     system-auth
-
-session   include     system-auth
--session   optional   pam_elogind.so
-
-password  include     system-auth
+# VertexOS lightdm autologin PAM (glibc). Members of 'autologin' (vertex on the
+# live ISO) log in without a password; system-login provides the elogind seat.
+auth       required   pam_succeed_if.so user ingroup autologin
+auth       required   pam_permit.so
+account    include    system-login
+password   include    system-login
+session    include    system-login

@@ -1,0 +1,26 @@
+#!/bin/sh
+# VertexOS lightdm session wrapper (replaces stock /etc/lightdm/Xsession).
+# Stock wrapper aborts under lightdm's minimal env (one sourced xinitrc.d script
+# fails) -> session exits rc=1 -> greeter fallback loop. This skips that fragile
+# sourcing, guarantees XDG_RUNTIME_DIR + a D-Bus session, and logs.
+exec >>/tmp/vtx-wrapper.log 2>&1
+echo "=== wrapper start args=[$*] ==="
+echo "user=$(id -un 2>/dev/null) uid=$(id -u 2>/dev/null) DISPLAY=$DISPLAY XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
+
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:$PATH"
+export XDG_SESSION_TYPE=x11
+
+# pam_elogind normally sets XDG_RUNTIME_DIR; create a fallback if it didn't.
+if [ -z "$XDG_RUNTIME_DIR" ]; then
+    XDG_RUNTIME_DIR="/run/user/$(id -u)"
+    export XDG_RUNTIME_DIR
+    mkdir -p "$XDG_RUNTIME_DIR" && chmod 700 "$XDG_RUNTIME_DIR"
+fi
+
+[ -f "$HOME/.Xresources" ] && xrdb -merge "$HOME/.Xresources" 2>/dev/null
+
+echo "=== exec: dbus-run-session -- $* ==="
+if command -v dbus-run-session >/dev/null 2>&1; then
+    exec dbus-run-session -- "$@"
+fi
+exec "$@"

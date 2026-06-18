@@ -33,7 +33,7 @@ PATCHES="$ROOT/build/vertex-vmklive-patches"
 mkdir -p "$OUT_DIR"
 
 MIRROR="https://repo-de.voidlinux.org"   # repo-default has been refusing; revisit later
-ARCH="x86_64-musl"
+ARCH="x86_64"
 VARIANT="xfce"
 BOOT_TITLE="VertexOS"
 
@@ -110,13 +110,16 @@ docker run --rm --privileged --network host \
         # Patch ISO volume label
         sed -i 's|VOID_LIVE|VERTEXOS_LIVE|g' isolinux/isolinux.cfg.in mklive.sh
 
+        # VertexOS: glibc-only build - strip the default musl + aarch64 repos
+        # that mklive.sh hardcodes (they 404 and clutter the build log).
+        sed -i 's| --repository=https://repo-default.voidlinux.org/current/musl||g; s| --repository=https://repo-default.voidlinux.org/current/aarch64||g' mklive.sh
+
         # mklive.sh default BOOT_TITLE
         sed -i 's|BOOT_TITLE=\"Void Linux\"|BOOT_TITLE=\"VertexOS\"|g' mklive.sh
 
         echo '==> Running mkiso.sh with overlay + hardened cmdline ...'
         ./mkiso.sh -a $ARCH -b $VARIANT -d $DATE \\
             -r $MIRROR/current \\
-            -r $MIRROR/current/musl \\
             -- -p \"$EXTRA_PKGS\" \\
                -I /overlay \\
                -T \"$BOOT_TITLE\" \\
