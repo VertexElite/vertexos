@@ -1,13 +1,17 @@
 # installer/
 
-Calamares branding + post-install hooks for the VertexOS live ISO.
+Post-install branding + hooks for the VertexOS live ISO.
 
-Planned contents (Phase 2):
+The live ISO installs to disk via Void's bundled **`void-installer`** — run
+`sudo void-installer` from the live desktop, or use the **Install VertexOS**
+desktop launcher. (Calamares is not packaged for Void; a graphical guided
+installer would require building it from source — tracked as a future item.)
 
-- `calamares/branding/vertexos/` — branding.desc, slideshow, logos.
-- `calamares/settings.conf` — module sequence (partition, luks, users, …).
-- `hooks/` — post-install scripts that drop the hardened sysctl, enable the
-  nftables/AppArmor/usbguard runit services, and install the picom/XFCE
+The hardened overlay is copied onto the target by void-installer's rootfs copy,
+so the installed system inherits the VertexOS hardening + desktop by default.
+
+Planned contents:
+
+- `hooks/` — post-install scripts to re-assert the hardened sysctl, enable the
+  nftables / AppArmor / usbguard runit services, and install the picom / XFCE
   defaults into the target root.
-
-Empty for now — Phase 0 builds a live ISO only, no guided installer yet.

@@ -2,11 +2,11 @@
 
 ## TL;DR — Why we use stock `linux`, not `linux-hardened`
 
-Void Linux ships no `linux-hardened` package. Chimera Linux (also musl, hardening-focused) does not either — their hardening lives in the `linux-lts` build config.
+Void Linux ships no `linux-hardened` package. Chimera Linux (musl, hardening-focused) does not either — their hardening lives in the `linux-lts` build config.
 
 We verified (June 15, 2026) that **every KSPP / Chimera hardening flag is already enabled in Void's stock `linux` 6.18.35** built with their default config.
 
-## Flag verification (Void stock 6.18.35-musl)
+## Flag verification (Void stock 6.18.35)
 
 ```
 CONFIG_BPF_UNPRIV_DEFAULT_OFF=y              ✅

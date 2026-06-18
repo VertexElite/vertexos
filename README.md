@@ -4,11 +4,11 @@
 
 ### The Linux desktop you can safely run coding agents and untrusted dependencies on.
 
-Security-hardened · **Void Linux (musl)** · supply-chain & agent-abuse defense — *enforced from boot, not bolted on.*
+Security-hardened · **Void Linux (glibc)** · supply-chain & agent-abuse defense — *enforced from boot, not bolted on.*
 
 [![Release](https://img.shields.io/github/v/release/VertexElite/vertexos?include_prereleases&label=release)](https://github.com/VertexElite/vertexos/releases/latest)
 [![White-team](https://img.shields.io/badge/white--team-PASS%2010%2F10-brightgreen)](#%EF%B8%8F-validated--white-team-pass-1010)
-![Base](https://img.shields.io/badge/base-Void%20musl-2b6cb0)
+![Base](https://img.shields.io/badge/base-Void%20glibc-2b6cb0)
 ![Init](https://img.shields.io/badge/init-runit-2b6cb0)
 ![Kernel](https://img.shields.io/badge/kernel-6.18%20KSPP-2b6cb0)
 ![Code license](https://img.shields.io/badge/code-MIT-green)
@@ -37,7 +37,7 @@ default and arm themselves at boot.** Then it proves they actually work — adve
 
 ## ✨ Highlights
 
-- 🧱 **Void Linux musl** base — no glibc CVE class, rolling, independent, `runit` init
+- 🧱 **Void Linux (glibc)** base — broad binary compatibility for real-world apps, rolling, independent, `runit` init
 - 🛡️ **KSPP-hardened kernel** (6.18) + a full sysctl hardening drop-in, applied at boot
 - 🔒 **AppArmor enforcing** — 74 profiles in *enforce* mode (not complain)
 - 🚧 **nftables default-deny — inbound *and* egress** — outbound C2/exfil is dropped + logged
@@ -127,16 +127,16 @@ Deep dives: [threat model](docs/threat-model.md) · [supply-chain defense](docs/
 **2. Verify it** (always — a hardened OS you didn't verify is theatre):
 ```bash
 sha256sum -c SHA256SUMS
-# vertexos-0.1.0-alpha-x86_64-musl.iso: OK
+# vertexos-0.1.0-alpha-x86_64.iso: OK
 ```
 
 **3. Write to USB** and boot it, or try it in a VM:
 ```bash
 # USB (replace sdX with your stick — this erases it)
-sudo dd if=vertexos-0.1.0-alpha-x86_64-musl.iso of=/dev/sdX bs=4M status=progress oflag=sync
+sudo dd if=vertexos-0.1.0-alpha-x86_64.iso of=/dev/sdX bs=4M status=progress oflag=sync
 
 # or QEMU
-qemu-system-x86_64 -enable-kvm -m 4G -cdrom vertexos-0.1.0-alpha-x86_64-musl.iso
+qemu-system-x86_64 -enable-kvm -m 4G -cdrom vertexos-0.1.0-alpha-x86_64.iso
 ```
 …or point VirtualBox/Ventoy at the ISO. **Live login:** `vertex` / `vertex`.
 
@@ -250,7 +250,7 @@ kernel/       Hardened sysctl drop-ins + custom kernel config (planned)
 packages/     VertexOS-specific srcpkgs (XBPS templates)
 security/     AppArmor profiles, nftables, Falco/Suricata/AIDE rule-sets
 ui/           XFCE defaults, Aero-Glass theme, wallpapers, greeter
-installer/    Calamares branding + post-install hooks
+installer/    void-installer post-install hooks + branding
 vertexsense/  Go security-telemetry TUI (collectors + dashboard + tests)
 tools/        cve-watch pipeline
 docs/         threat model, CVE matrix, supply-chain defense, audits, cve-watch

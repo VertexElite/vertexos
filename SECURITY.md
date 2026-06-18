@@ -1,6 +1,6 @@
 # Security Policy
 
-VertexOS is a security-hardened Void Linux (musl) distribution whose **primary
+VertexOS is a security-hardened Void Linux (glibc) distribution whose **primary
 defensive target is supply-chain and AI-agent-abuse attacks** against developers
 and the AI coding agents they run. We take security reports seriously and
 appreciate responsible, coordinated disclosure.
